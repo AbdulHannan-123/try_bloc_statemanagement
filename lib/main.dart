@@ -28,9 +28,36 @@ extension RandomElement<T> on Iterable<T>{  // allow us to call 1 iterable funct
   );
 }
 
+class NameCubit extends Cubit<String?> {    // the need an state
+ NameCubit() : super(null) ;            //i dont ahve the n=initial state     // you need the initial value har coded to give that a state   
 
-class HomePage extends StatelessWidget {
+  void pickRandomName() => emit(names.getRandomElement());   //get the value from extention we created
+
+}
+
+
+class HomePage extends StatefulWidget {         // making statefull so we can create and dispose the cuvit
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+
+  late final NameCubit cubit;      // defining the cubit in this state
+
+  @override
+  void initState() {
+    super.initState();
+    cubit = NameCubit();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    cubit.close();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +65,30 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Homepage"),
       ),
+      body: StreamBuilder<String?>(
+        stream: cubit.stream,
+        builder: (context, snapshot) {
+          final button = TextButton(
+            onPressed: ()=>cubit.pickRandomName(),
+             child: Text('Pick a random name'),
+            );
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+                return button;
+              case ConnectionState.waiting:
+                return button;
+              case ConnectionState.active:
+                return Column(
+                  children: [
+                    Text(snapshot.data ?? " "),
+                    button,
+                  ],
+                );
+              case ConnectionState.done:
+                return const SizedBox();
+            }
+        },
+        ),
     );
   }
 }
